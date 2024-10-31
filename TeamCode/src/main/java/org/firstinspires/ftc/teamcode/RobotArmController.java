@@ -13,7 +13,7 @@ public class RobotArmController {
     private double PICKUP_SPEED_TO_POWER = 1.0;
     private double ANGLE_FROM_ENCODER_COUNTS = (360.0 / 8192.0); // 8192 counts per revolution
     private double ANGLE_ERROR_TOLERANCE = 1; // Allow 1 degree of angle error
-    private double ANGLE_ERROR_TO_POWER = 0.01;
+    private double ANGLE_ERROR_TO_POWER = 0.0025;
 
     private Telemetry telemetry;
 
@@ -30,6 +30,8 @@ public class RobotArmController {
     private double pickupSpeed = 0.0;     // Target pickup *speed*
 
     public RobotArmController(Telemetry telemetry, HardwareMap hardwareMap) {
+        this.telemetry = telemetry;
+
          pickupServoL = hardwareMap.crservo.get("PickupServoL");
          pickupServoR = hardwareMap.crservo.get("PickupServoR");
          pickupServoR.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -37,6 +39,8 @@ public class RobotArmController {
          wristServoL = hardwareMap.servo.get("WristServoL");
          wristServoR = hardwareMap.servo.get("WristServoR");
          wristServoR.setDirection(Servo.Direction.REVERSE);
+
+
 
          angleMotorL = hardwareMap.dcMotor.get("AngleMotorL");
          angleMotorR = hardwareMap.dcMotor.get("AngleMotorR");
@@ -46,11 +50,30 @@ public class RobotArmController {
 
          extensionMotor = hardwareMap.dcMotor.get("ExtensionMotor");
          extensionMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-         extensionMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
          extensionMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
          extensionMotor.setPower(0.0); // Start up in brake mode
     }
 
+
+    public void driveDirectly(double armExtension, double armAngle, double wristAngle, double pickup) {
+        extensionMotor.setTargetPosition((int) (armExtension * EXTENSION_LENGTH_TO_COUNTS));
+        extensionMotor.setPower(0.2); // Run at 20% power in run-to-position mode
+        extensionMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        //wristServoL.setPosition(wristAngle);
+        //wristServoR.setPosition(wristAngle);
+        pickupServoL.setPower(pickup * 0.1);
+        pickupServoR.setPower(pickup * 0.1);
+
+
+        angleMotorL.setPower(armAngle * 0.1);
+        angleMotorR.setPower(armAngle * 0.1);
+
+        telemetry.addData("wristAngleL", wristServoL.getPosition() * 360);
+        telemetry.addData("wristAngleR", wristServoR.getPosition() * 360);
+
+
+    }
+    /*
     public void setpoint(double armExtension, double armAngle, double wristAngle, double pickup) {
         extensionTarget = armExtension;
         angleTarget = armAngle;
@@ -80,6 +103,7 @@ public class RobotArmController {
     public void update() {
         extensionMotor.setTargetPosition((int) (extensionTarget * EXTENSION_LENGTH_TO_COUNTS));
         extensionMotor.setPower(0.5); // Run at 50% power in run-to-position mode
+        extensionMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         wristServoL.setPosition(wristTarget);
         wristServoR.setPosition(wristTarget);
@@ -100,7 +124,11 @@ public class RobotArmController {
         if (Math.abs(angleError) < ANGLE_ERROR_TOLERANCE) {
             angleError = 0;
         }
+
+
         angleMotorL.setPower(angleError * ANGLE_ERROR_TO_POWER);
         angleMotorR.setPower(angleError * ANGLE_ERROR_TO_POWER);
-    }
+
+     */
 }
+

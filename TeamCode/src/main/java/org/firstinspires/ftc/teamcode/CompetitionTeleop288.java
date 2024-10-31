@@ -33,6 +33,7 @@ public class CompetitionTeleop288 extends LinearOpMode {
     private double CALIBRATE_TRANSLATE_Y = -1.0; // Gamepad Y axes are inverted from what you'd expect -- down is positive by default. So we negate it here.
     private double CALIBRATE_ROTATE = 1.0;
 
+
     private final double JOYSTICK_DEAD_ZONE = 0.20;
 
     IMU imu;
@@ -70,11 +71,14 @@ public class CompetitionTeleop288 extends LinearOpMode {
                 hardwareMap.crservo.get("RRSteer"),
                 hardwareMap.analogInput.get("RRsteer")
         );
+        imu = hardwareMap.get(IMU.class, "imu");
+
         SwerveDrive = new SwerveDriveCoordinator(telemetry, LFWheel, LRWheel, RFWheel, RRWheel);
         RobotArm = new RobotArmController(telemetry, hardwareMap);
 
+
         // Put initialization blocks here.
-        telemetry.addData("Status", "Waiting for Start");    //
+        telemetry.addData("Status", "Waiting for Start");
         telemetry.update();
         waitForStart();
 
@@ -83,9 +87,9 @@ public class CompetitionTeleop288 extends LinearOpMode {
                 new RevHubOrientationOnRobot(
                         RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
                         RevHubOrientationOnRobot.UsbFacingDirection.UP
+
                 )
         );
-        imu = hardwareMap.get(IMU.class, "imu");
         imu.initialize(imuParams);
 
         // Put run blocks here.
@@ -113,12 +117,15 @@ public class CompetitionTeleop288 extends LinearOpMode {
                 telemetry.addData("Info", "Resetting IMU orientation");
                 imu.initialize(imuParams); // Reset field-centric positioning when trigger is pressed
             }
+
             double inputDriveX = inputScaling(gamepad1.left_stick_x) * CALIBRATE_TRANSLATE_X * translateSpeed;
             double inputDriveY = inputScaling(gamepad1.left_stick_y) * CALIBRATE_TRANSLATE_Y * translateSpeed;
             double inputDriveRotation = inputScaling(gamepad1.right_stick_x) * CALIBRATE_ROTATE;
             double yawDegrees = imu.getRobotYawPitchRollAngles().getYaw(); // TODO: Ensure yaw is mapped correctly
+            yawDegrees = 0;
             // Rotate joystick X/Y from field-centric to robot-centric coordinates
             double robotDriveX = inputDriveX * cos(toRadians(yawDegrees)) - inputDriveY * sin(toRadians(yawDegrees));
+            //robotDriveX = 0;
             double robotDriveY = inputDriveX * sin(toRadians(yawDegrees)) + inputDriveY * cos(toRadians(yawDegrees));
             SwerveDrive.drive(robotDriveX, robotDriveY, inputDriveRotation);
 
@@ -126,7 +133,8 @@ public class CompetitionTeleop288 extends LinearOpMode {
             // angles and speed to some value, and when no button is pressed the targets are
             // updated by integrating the joystick inputs (so pushing the stick up makes the
             // target angle increase over time).
-            if (gamepad2.a) {
+            /*
+             if (gamepad2.a) {
                 // TODO: Decide if named setpoint methods are useful or if this should just be setpoint(1.1, 0, 2, 100) or something
                 RobotArm.setpointFloorPickup();
             } else if (gamepad2.b) {
@@ -144,7 +152,21 @@ public class CompetitionTeleop288 extends LinearOpMode {
             }
             RobotArm.update();
 
+             */
+
+            /*RobotArm.driveDirectly(inputScaling(gamepad2.left_stick_y),
+                    inputScaling(gamepad2.left_stick_x),
+                    inputScaling(gamepad2.right_stick_x),
+                    inputScaling(gamepad2.right_stick_y));
+
+             */
+
+
             telemetry.update();
+
+
+
+
         }
     }
 

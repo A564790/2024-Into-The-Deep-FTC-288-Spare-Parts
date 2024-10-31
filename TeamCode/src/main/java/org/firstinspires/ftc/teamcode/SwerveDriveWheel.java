@@ -19,9 +19,10 @@ public class SwerveDriveWheel {
         AngleSensor = angleSensor;
     }
 
-    private double ERROR_TO_SERVO_POWER = 0.01;
+    private double ERROR_TO_SERVO_POWER = 0.003;
     private double MAXIMUM_SERVO_POWER = 1.0;
     private double ANGLE_ERROR_TOLERANCE = 0.5;
+    private double MINIMUM_SERVO_POWER = 0.03;
 
     public void drive(double targetAngle, double motorPower) {
         double currentAngle = (AngleSensor.getVoltage() / 3.3) * 360 * -1; // Flip direction so clockwise is positive (with zero being forward)
@@ -35,6 +36,7 @@ public class SwerveDriveWheel {
 
         // Drive the servo. Do nothing if the angle error is small enough.
         double servoPower = angleError * ERROR_TO_SERVO_POWER;
+        servoPower += Math.signum(angleError) * MINIMUM_SERVO_POWER;
         servoPower = Math.min(servoPower, MAXIMUM_SERVO_POWER);
         servoPower = Math.max(servoPower, -MAXIMUM_SERVO_POWER);
         if (Math.abs(angleError) < ANGLE_ERROR_TOLERANCE) {
