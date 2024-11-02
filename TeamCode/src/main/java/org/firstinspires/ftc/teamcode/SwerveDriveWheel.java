@@ -19,7 +19,7 @@ public class SwerveDriveWheel {
         AngleSensor = angleSensor;
     }
 
-    private double ERROR_TO_SERVO_POWER = 0.003;
+    private double ERROR_TO_SERVO_POWER = 0.002;
     private double MAXIMUM_SERVO_POWER = 1.0;
     private double ANGLE_ERROR_TOLERANCE = 0.5;
     private double MINIMUM_SERVO_POWER = 0.03;

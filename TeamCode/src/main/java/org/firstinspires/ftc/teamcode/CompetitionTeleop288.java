@@ -10,6 +10,8 @@ import com.qualcomm.hardware.bosch.BHI260IMU;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -26,8 +28,8 @@ public class CompetitionTeleop288 extends LinearOpMode {
     private RobotArmController RobotArm;
 
 
-    private double TRANSLATE_DEFAULT_SPEED = 0.5;
-    private double TRANSLATE_HIGH_SPEED = 1.0;
+    private double TRANSLATE_DEFAULT_SPEED = 0.6;
+    private double TRANSLATE_HIGH_SPEED = 0.8;
 
     private double CALIBRATE_TRANSLATE_X = 1.0;
     private double CALIBRATE_TRANSLATE_Y = -1.0; // Gamepad Y axes are inverted from what you'd expect -- down is positive by default. So we negate it here.
@@ -36,6 +38,9 @@ public class CompetitionTeleop288 extends LinearOpMode {
 
     private final double JOYSTICK_DEAD_ZONE = 0.20;
 
+    private DcMotor angleMotorL = null;
+    private DcMotor angleMotorR = null;
+
     IMU imu;
 
     /**
@@ -43,6 +48,13 @@ public class CompetitionTeleop288 extends LinearOpMode {
      */
     @Override
     public void runOpMode() {
+        angleMotorL = hardwareMap.get(DcMotor.class, "AngleMotorL");
+        angleMotorR = hardwareMap.get(DcMotor.class, "AngleMotorR");
+        angleMotorL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE); // Hold position when on target
+        angleMotorR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE); // Hold position when on target
+        angleMotorR.setDirection(DcMotorSimple.Direction.REVERSE);
+
+
         LFWheel = new SwerveDriveWheel(
                 telemetry,
                 "LF",
@@ -106,9 +118,9 @@ public class CompetitionTeleop288 extends LinearOpMode {
             telemetry.addData("Yaw (Z)", orientation.getYaw(AngleUnit.DEGREES));
             telemetry.addData("Pitch (X)", orientation.getPitch(AngleUnit.DEGREES));
             telemetry.addData("Roll (Y)", orientation.getRoll(AngleUnit.DEGREES));
-            telemetry.addData("Yaw (Z) velocity", angularVelocity.zRotationRate);
-            telemetry.addData("Pitch (X) velocity", angularVelocity.xRotationRate);
-            telemetry.addData("Roll (Y) velocity", angularVelocity.yRotationRate);
+            //telemetry.addData("Yaw (Z) velocity", angularVelocity.zRotationRate);
+            //telemetry.addData("Pitch (X) velocity", angularVelocity.xRotationRate);
+            //telemetry.addData("Roll (Y) velocity", angularVelocity.yRotationRate);
 
             // Field-centric control works by using the IMU heading to translate a field-centric
             // X-Y movement input into the robot-centric coordinate system. This is just a simple
@@ -118,9 +130,9 @@ public class CompetitionTeleop288 extends LinearOpMode {
                 imu.initialize(imuParams); // Reset field-centric positioning when trigger is pressed
             }
 
-            double inputDriveX = inputScaling(gamepad1.left_stick_x) * CALIBRATE_TRANSLATE_X * translateSpeed;
-            double inputDriveY = inputScaling(gamepad1.left_stick_y) * CALIBRATE_TRANSLATE_Y * translateSpeed;
-            double inputDriveRotation = inputScaling(gamepad1.right_stick_x) * CALIBRATE_ROTATE;
+            double inputDriveX = inputScaling(-gamepad1.left_stick_x) * CALIBRATE_TRANSLATE_X * translateSpeed;
+            double inputDriveY = inputScaling(-gamepad1.left_stick_y) * CALIBRATE_TRANSLATE_Y * translateSpeed;
+            double inputDriveRotation = inputScaling(-gamepad1.right_stick_x) * CALIBRATE_ROTATE;
             double yawDegrees = imu.getRobotYawPitchRollAngles().getYaw(); // TODO: Ensure yaw is mapped correctly
             yawDegrees = 0;
             // Rotate joystick X/Y from field-centric to robot-centric coordinates
@@ -154,12 +166,58 @@ public class CompetitionTeleop288 extends LinearOpMode {
 
              */
 
-            /*RobotArm.driveDirectly(inputScaling(gamepad2.left_stick_y),
-                    inputScaling(gamepad2.left_stick_x),
-                    inputScaling(gamepad2.right_stick_x),
-                    inputScaling(gamepad2.right_stick_y));
+            /*if (inputScaling(gamepad2.left_stick_x) ) {
+                angleMotorL.setPower(inputScaling(gamepad2.left_stick_x));
+                angleMotorR.setPower(inputScaling(gamepad2.left_stick_x));
+            }
 
              */
+
+
+
+            telemetry.addData("angleMotorL", angleMotorL.getPower());
+            telemetry.addData("angleMotorR", angleMotorR.getPower());
+
+            double intakeInput = 0.0;
+            if (gamepad2.left_bumper) {
+                intakeInput = 1.0;
+            } else if (gamepad2.right_bumper) {
+                intakeInput = -1.0;
+            }
+
+            double armExtensionInput = 0.0;
+            if (gamepad2.right_trigger > 0) {
+                armExtensionInput = 1.0;
+            } else if (gamepad2.left_trigger > 0) {
+                armExtensionInput = -1.0;
+            }
+
+            angleMotorL.setPower(inputScaling(-gamepad2.left_stick_y * 0.75));
+            angleMotorR.setPower(inputScaling(-gamepad2.left_stick_y * 0.75));
+
+            if (gamepad2.x) {
+                RobotArm.setpointFloorPickup();
+            }
+
+            if (gamepad2.a) {
+                RobotArm.setpointSubPickUp();
+            }
+
+            if (gamepad2.y) {
+                RobotArm.setpointScoreHighBasket();
+            }
+
+            RobotArm.driveDirectly(
+                    inputScaling(armExtensionInput),
+                    (gamepad2.dpad_down),
+                    inputScaling(gamepad2.left_stick_y),
+                    inputScaling(gamepad2.right_stick_y),
+                    inputScaling(intakeInput));
+
+
+
+
+
 
 
             telemetry.update();
