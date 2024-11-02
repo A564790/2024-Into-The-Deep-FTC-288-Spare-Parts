@@ -28,7 +28,7 @@ public class CompetitionTeleop288 extends LinearOpMode {
     private RobotArmController RobotArm;
 
 
-    private double TRANSLATE_DEFAULT_SPEED = 0.6;
+    private double TRANSLATE_DEFAULT_SPEED = 0.7;
     private double TRANSLATE_HIGH_SPEED = 0.8;
 
     private double CALIBRATE_TRANSLATE_X = 1.0;
@@ -113,11 +113,11 @@ public class CompetitionTeleop288 extends LinearOpMode {
             }
 
             // IMU debug logging
-            YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
-            AngularVelocity angularVelocity = imu.getRobotAngularVelocity(AngleUnit.DEGREES);
-            telemetry.addData("Yaw (Z)", orientation.getYaw(AngleUnit.DEGREES));
-            telemetry.addData("Pitch (X)", orientation.getPitch(AngleUnit.DEGREES));
-            telemetry.addData("Roll (Y)", orientation.getRoll(AngleUnit.DEGREES));
+            //YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+            //AngularVelocity angularVelocity = imu.getRobotAngularVelocity(AngleUnit.DEGREES);
+            //telemetry.addData("Yaw (Z)", orientation.getYaw(AngleUnit.DEGREES));
+            //telemetry.addData("Pitch (X)", orientation.getPitch(AngleUnit.DEGREES));
+            //telemetry.addData("Roll (Y)", orientation.getRoll(AngleUnit.DEGREES));
             //telemetry.addData("Yaw (Z) velocity", angularVelocity.zRotationRate);
             //telemetry.addData("Pitch (X) velocity", angularVelocity.xRotationRate);
             //telemetry.addData("Roll (Y) velocity", angularVelocity.yRotationRate);
@@ -173,10 +173,6 @@ public class CompetitionTeleop288 extends LinearOpMode {
 
              */
 
-
-
-            telemetry.addData("angleMotorL", angleMotorL.getPower());
-            telemetry.addData("angleMotorR", angleMotorR.getPower());
 
             double intakeInput = 0.0;
             if (gamepad2.left_bumper) {

@@ -17,9 +17,9 @@ public class SwerveDriveCoordinator {
     }
     public void drive(double vx, double vy, double vr) {
 
-        Telemetry.addData("Velocity X", vx);
-        Telemetry.addData("Velocity Y", vy);
-        Telemetry.addData("Angular Velocity", vr);
+        //Telemetry.addData("Velocity X", vx);
+        //Telemetry.addData("Velocity Y", vy);
+        //Telemetry.addData("Angular Velocity", vr);
 
         double lfX = vx + vr;
         double lfY = vy + vr;

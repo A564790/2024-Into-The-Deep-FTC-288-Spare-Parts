@@ -19,10 +19,10 @@ public class SwerveDriveWheel {
         AngleSensor = angleSensor;
     }
 
-    private double ERROR_TO_SERVO_POWER = 0.002;
+    private double ERROR_TO_SERVO_POWER = 0.0015;
     private double MAXIMUM_SERVO_POWER = 1.0;
     private double ANGLE_ERROR_TOLERANCE = 0.5;
-    private double MINIMUM_SERVO_POWER = 0.03;
+    private double MINIMUM_SERVO_POWER = 0.025;
 
     public void drive(double targetAngle, double motorPower) {
         double currentAngle = (AngleSensor.getVoltage() / 3.3) * 360 * -1; // Flip direction so clockwise is positive (with zero being forward)
@@ -44,8 +44,8 @@ public class SwerveDriveWheel {
         }
         AngleServo.setPower(servoPower);
 
-        Telemetry.addData(Name + " Angle", currentAngle);
-        Telemetry.addData(Name + " Power", motorPower);
+        //Telemetry.addData(Name + " Angle", currentAngle);
+        //Telemetry.addData(Name + " Power", motorPower);
 
         DriveMotor.setPower(motorPower);
     }

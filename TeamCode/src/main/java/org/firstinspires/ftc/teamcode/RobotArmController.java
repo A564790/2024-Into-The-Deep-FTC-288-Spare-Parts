@@ -29,7 +29,7 @@ public class RobotArmController {
     private double wristTarget = 0.0;     // Target wrist angle
     private double pickupSpeed = 0.0;     // Target pickup *speed*
 
-    private double MAXIMUM_ARM_EXTENSION = 2700.0;
+    private double MAXIMUM_ARM_EXTENSION = 3650.0;
 
     //ChatGPT wrote all of the PID stuff idk
     // PID Constants
@@ -83,12 +83,12 @@ public class RobotArmController {
             extensionTarget = MAXIMUM_ARM_EXTENSION;
         }
 
-        telemetry.addData("extensionTarget",extensionTarget);
-        telemetry.addData("extensionReading",extensionMotor.getCurrentPosition());
         telemetry.addData("backwards", backwards);
+        telemetry.addData("extensionPosition", extensionMotor.getCurrentPosition());
+        telemetry.addData("extensionTarget", extensionTarget);
 
         extensionMotor.setTargetPosition((int)(extensionTarget));
-        extensionMotor.setPower(0.8); // Run at 50% power in run-to-position mode
+        extensionMotor.setPower(1.0); // Run at 50% power in run-to-position mode
         extensionMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         //double wristPosition = (wristInput + 1.0)/2.0;
@@ -97,13 +97,10 @@ public class RobotArmController {
         wristServoL.setPosition(wristTarget);
         //wristServoR.setPosition(wristTarget);
 
-        telemetry.addData("wristTarget", wristTarget);
-        telemetry.addData("wristPosition", wristServoL.getPosition());
-
 
         if (pickup > 0) {
-            pickupServoL.setPower(pickup * 0.25);
-            pickupServoR.setPower(pickup * 0.25);
+            pickupServoL.setPower(pickup * 0.20);
+            pickupServoR.setPower(pickup * 0.20);
         }
         else {
             pickupServoL.setPower(pickup);
@@ -185,7 +182,7 @@ public class RobotArmController {
     }
 
     public void setpointScoreHighBasket() {
-        this.setpoint(0.52);
+        this.setpoint(0.6);
     }
 
 }
