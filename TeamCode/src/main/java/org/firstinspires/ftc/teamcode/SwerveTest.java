@@ -20,6 +20,8 @@ public class SwerveTest extends LinearOpMode {
     private double CALIBRATE_TRANSLATE_Y = -1.0; // Gamepad Y axes are inverted from what you'd expect -- down is positive by default. So we negate it here.
     private double CALIBRATE_ROTATE = 1.0;
 
+    ;private final double JOYSTICK_DEAD_ZONE = 0.20;
+
     /**
      * This function is executed when this OpMode is selected from the Driver Station.
      */
@@ -61,14 +63,14 @@ public class SwerveTest extends LinearOpMode {
         // Put run blocks here.
         while (opModeIsActive()) {
             double translateSpeed = TRANSLATE_DEFAULT_SPEED;
-            if (gamepad1.right_bumper) {
+            if (gamepad1.right_trigger != 0) {
                 translateSpeed = TRANSLATE_HIGH_SPEED;
             }
 
             SwerveDrive.drive(
-                    gamepad1.left_stick_x * CALIBRATE_TRANSLATE_X * translateSpeed,
-                    gamepad1.left_stick_y * CALIBRATE_TRANSLATE_Y * translateSpeed,
-                    gamepad1.right_stick_x * CALIBRATE_ROTATE
+                    -gamepad1.left_stick_x * CALIBRATE_TRANSLATE_X * translateSpeed,
+                    -gamepad1.left_stick_y * CALIBRATE_TRANSLATE_Y * translateSpeed,
+                    -gamepad1.right_stick_x * CALIBRATE_ROTATE
             );
 
             telemetry.update();
