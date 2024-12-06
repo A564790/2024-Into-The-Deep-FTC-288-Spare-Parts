@@ -14,8 +14,9 @@ public class SwerveDriveCoordinator {
         LRWheel = lrWheel;
         RFWheel = rfWheel;
         RRWheel = rrWheel;
+
     }
-    public void drive(double vx, double vy, double vr) {
+    public void drive(double vx, double vy, double vr, double kp, double ki, double kd) {
 
         //Telemetry.addData("Velocity X", vx);
         //Telemetry.addData("Velocity Y", vy);
@@ -54,9 +55,9 @@ public class SwerveDriveCoordinator {
             rrPow /= powerScale;
         }
 
-        LFWheel.drive(lfDir, lfPow);
-        LRWheel.drive(lrDir, lrPow);
-        RFWheel.drive(rfDir, rfPow);
-        RRWheel.drive(rrDir, rrPow);
+        LFWheel.drive(lfDir, lfPow, kp, ki ,kd);
+        LRWheel.drive(lrDir, lrPow, kp, ki, kd);
+        RFWheel.drive(rfDir, rfPow, kp ,ki, kd);
+        RRWheel.drive(rrDir, rrPow, kp ,ki, kd);
     }
 }

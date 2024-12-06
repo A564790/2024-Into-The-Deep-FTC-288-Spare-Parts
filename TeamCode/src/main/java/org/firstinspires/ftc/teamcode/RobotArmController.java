@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+/* package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -31,18 +31,9 @@ public class RobotArmController {
 
     private double MAXIMUM_ARM_EXTENSION = 3650.0;
 
-    //ChatGPT wrote all of the PID stuff idk
-    // PID Constants
-    private double Kp = 1.0; // Proportional gain
-    private double Ki = 0.12; // Integral gain
-    private double Kd = 0.01; // Derivative gain
-
-    // PID Variables
-    public double previousError = 0.0;
-    public double integral = 0.0;
-
-    public RobotArmController(Telemetry telemetry, HardwareMap hardwareMap) {
+    /* public RobotArmController(Telemetry telemetry, HardwareMap hardwareMap) {
         this.telemetry = telemetry;
+
 
          pickupServoL = hardwareMap.crservo.get("PickupServoL");
          pickupServoR = hardwareMap.crservo.get("PickupServoR");
@@ -126,27 +117,6 @@ public class RobotArmController {
         double angleError = (angleTarget - angleCurrent);
         // double angleCorrection = 0; // angleError * ANGLE_ERROR_TO_POWER;
 
-        //lines 111 - 120 is more ChatGPT code
-        // PID calculations
-        integral += angleError; // Accumulate error for the integral term
-
-        double deltaError = angleError - previousError; // Calculate the change in error
-
-
-        // Calculate the PID output
-        double angleCorrection = (Kp * angleError) + (Ki * integral) + (Kd * deltaError);
-
-        // Save the current error for the next loop iteration
-        previousError = angleError;
-
-        // Clamp the integral term to prevent windup
-        integral = Math.max(-10.0, Math.min(10.0, integral));
-
-        // Reset integral if error is small
-        if (Math.abs(angleError) < 2.5) { // Adjust threshold as needed
-            angleCorrection = 0;
-        }
-
         angleCorrection += (angleCurrent < 120) ? 0.1 : -0.1;
         //angleCorrection += Math.signum(angleError) * 0.1; // Static bias
 
@@ -163,10 +133,7 @@ public class RobotArmController {
 
          */
 
-
-    }
-
-    public void setpoint(double wristAngle) {
+    /*public void setpoint(double wristAngle) {
         //extensionTarget = armExtension;
         //angleTarget = armAngle;
         wristTarget = wristAngle;
@@ -185,5 +152,10 @@ public class RobotArmController {
         this.setpoint(0.6);
     }
 
+
+
 }
+
+     */
+
 

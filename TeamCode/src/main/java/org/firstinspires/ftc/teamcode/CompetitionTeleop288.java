@@ -8,6 +8,7 @@ import static java.lang.Math.toRadians;
 
 import com.qualcomm.hardware.bosch.BHI260IMU;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -20,12 +21,12 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 // Recommended reading: https://compendium.readthedocs.io/en/latest/tasks/drivetrains/swerve.html
+// I'm illiterate
 
 @TeleOp(name = "Competition Teleop", group = "")
 public class CompetitionTeleop288 extends LinearOpMode {
     private SwerveDriveWheel LFWheel, LRWheel, RFWheel, RRWheel;
     private SwerveDriveCoordinator SwerveDrive;
-    private RobotArmController RobotArm;
 
 
     private double TRANSLATE_DEFAULT_SPEED = 0.7;
@@ -34,6 +35,9 @@ public class CompetitionTeleop288 extends LinearOpMode {
     private double CALIBRATE_TRANSLATE_X = 1.0;
     private double CALIBRATE_TRANSLATE_Y = -1.0; // Gamepad Y axes are inverted from what you'd expect -- down is positive by default. So we negate it here.
     private double CALIBRATE_ROTATE = 1.0;
+    private double proportional = 0;
+    private double integral = 0;
+    private double derivative = 0;
 
 
     private final double JOYSTICK_DEAD_ZONE = 0.20;
@@ -48,12 +52,6 @@ public class CompetitionTeleop288 extends LinearOpMode {
      */
     @Override
     public void runOpMode() {
-        angleMotorL = hardwareMap.get(DcMotor.class, "AngleMotorL");
-        angleMotorR = hardwareMap.get(DcMotor.class, "AngleMotorR");
-        angleMotorL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE); // Hold position when on target
-        angleMotorR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE); // Hold position when on target
-        angleMotorR.setDirection(DcMotorSimple.Direction.REVERSE);
-
 
         LFWheel = new SwerveDriveWheel(
                 telemetry,
@@ -83,11 +81,13 @@ public class CompetitionTeleop288 extends LinearOpMode {
                 hardwareMap.crservo.get("RRSteer"),
                 hardwareMap.analogInput.get("RRsteer")
         );
+
+
         imu = hardwareMap.get(IMU.class, "imu");
 
         SwerveDrive = new SwerveDriveCoordinator(telemetry, LFWheel, LRWheel, RFWheel, RRWheel);
-        RobotArm = new RobotArmController(telemetry, hardwareMap);
-
+        //RobotArm = new RobotArmController(telemetry, hardwareMap);
+        scoringController robotScoring = new scoringController(telemetry, hardwareMap);
 
         // Put initialization blocks here.
         telemetry.addData("Status", "Waiting for Start");
@@ -102,6 +102,7 @@ public class CompetitionTeleop288 extends LinearOpMode {
 
                 )
         );
+
         imu.initialize(imuParams);
 
         // Put run blocks here.
@@ -133,87 +134,56 @@ public class CompetitionTeleop288 extends LinearOpMode {
             double inputDriveX = inputScaling(-gamepad1.left_stick_x) * CALIBRATE_TRANSLATE_X * translateSpeed;
             double inputDriveY = inputScaling(-gamepad1.left_stick_y) * CALIBRATE_TRANSLATE_Y * translateSpeed;
             double inputDriveRotation = inputScaling(-gamepad1.right_stick_x) * CALIBRATE_ROTATE;
-            double yawDegrees = imu.getRobotYawPitchRollAngles().getYaw(); // TODO: Ensure yaw is mapped correctly
-            yawDegrees = 0;
+            double yawDegrees = -imu.getRobotYawPitchRollAngles().getYaw();
+            //yawDegrees = 0;
             // Rotate joystick X/Y from field-centric to robot-centric coordinates
             double robotDriveX = inputDriveX * cos(toRadians(yawDegrees)) - inputDriveY * sin(toRadians(yawDegrees));
             //robotDriveX = 0;
             double robotDriveY = inputDriveX * sin(toRadians(yawDegrees)) + inputDriveY * cos(toRadians(yawDegrees));
-            SwerveDrive.drive(robotDriveX, robotDriveY, inputDriveRotation);
 
-            // Robot arm control. When various buttons are pushed they directly set the target
-            // angles and speed to some value, and when no button is pressed the targets are
-            // updated by integrating the joystick inputs (so pushing the stick up makes the
-            // target angle increase over time).
-            /*
-             if (gamepad2.a) {
-                // TODO: Decide if named setpoint methods are useful or if this should just be setpoint(1.1, 0, 2, 100) or something
-                RobotArm.setpointFloorPickup();
-            } else if (gamepad2.b) {
-                RobotArm.setpointScoreOnBarPosition();
-            } else if (gamepad2.x) {
-                RobotArm.setpointScoreOnBarRelease();
-            } else {
-                RobotArm.adjust(
-                        // TODO: Assign sticks properly
-                        inputScaling(gamepad2.left_stick_y),
-                        inputScaling(gamepad2.left_stick_x),
-                        inputScaling(gamepad2.right_stick_x),
-                        inputScaling(gamepad2.right_stick_y)
-                );
+            //This is my weird way of tuning PID values using the controller
+            if (gamepad1.dpad_down) {
+                proportional -= 0.0001;
             }
-            RobotArm.update();
-
-             */
-
-            /*if (inputScaling(gamepad2.left_stick_x) ) {
-                angleMotorL.setPower(inputScaling(gamepad2.left_stick_x));
-                angleMotorR.setPower(inputScaling(gamepad2.left_stick_x));
+            if (gamepad1.dpad_up) {
+                proportional += 0.0001;
             }
-
-             */
-
-
-            double intakeInput = 0.0;
-            if (gamepad2.left_bumper) {
-                intakeInput = 1.0;
-            } else if (gamepad2.right_bumper) {
-                intakeInput = -1.0;
+            if (gamepad1.dpad_left) {
+                integral -= 0.0001;
             }
-
-            double armExtensionInput = 0.0;
-            if (gamepad2.right_trigger > 0) {
-                armExtensionInput = 1.0;
-            } else if (gamepad2.left_trigger > 0) {
-                armExtensionInput = -1.0;
+            if (gamepad1.dpad_right) {
+                integral += 0.0001;
             }
-
-            angleMotorL.setPower(inputScaling(-gamepad2.left_stick_y * 0.75));
-            angleMotorR.setPower(inputScaling(-gamepad2.left_stick_y * 0.75));
-
-            if (gamepad2.x) {
-                RobotArm.setpointFloorPickup();
+            if (gamepad1.y) {
+                derivative -= 0.0001;
             }
+            if (gamepad1.a) {
+                derivative += 0.0001;
+            }
+            //I'm not sure if this is the best way to get PID constants from here into SwerveDriveWheel but it works
+            SwerveDrive.drive(robotDriveX, robotDriveY, inputDriveRotation, proportional, integral, derivative);
+
+
+            //Robot Scoring control
+            //this is just for the servos, I haven't written anything for the slide motors yet
+            robotScoring.shoulderDrive(gamepad2.right_stick_x);
 
             if (gamepad2.a) {
-                RobotArm.setpointSubPickUp();
+                robotScoring.intakePresetPoint1();
+                robotScoring.upperPickupPresetPoint1();
             }
-
-            if (gamepad2.y) {
-                RobotArm.setpointScoreHighBasket();
+            else if (gamepad2.b) {
+                robotScoring.intakePresetPoint2();
+                robotScoring.upperPickupPresetPoint2();
             }
-
-            RobotArm.driveDirectly(
-                    inputScaling(armExtensionInput),
-                    (gamepad2.dpad_down),
-                    inputScaling(gamepad2.left_stick_y),
-                    inputScaling(gamepad2.right_stick_y),
-                    inputScaling(intakeInput));
-
-
-
-
-
+            else if (gamepad2.x) {
+                robotScoring.intakePresetPoint3();
+                robotScoring.upperPickupPresetPoint3();
+            }
+            else if (gamepad2.y) {
+                robotScoring.intakePresetPoint4();
+                robotScoring.upperPickupPresetPoint4();
+            }
 
 
             telemetry.update();
