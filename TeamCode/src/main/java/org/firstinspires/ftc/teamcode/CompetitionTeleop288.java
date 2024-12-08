@@ -13,6 +13,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -99,17 +100,29 @@ public class CompetitionTeleop288 extends LinearOpMode {
                 new RevHubOrientationOnRobot(
                         RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
                         RevHubOrientationOnRobot.UsbFacingDirection.UP
-
                 )
         );
 
         imu.initialize(imuParams);
 
+        // Previous iteration gamepad states for edge detection
+        Gamepad prevGamepad1 = new Gamepad();
+        Gamepad prevGamepad2 = new Gamepad();
+        Gamepad currentGamepad1 = new Gamepad();
+        Gamepad currentGamepad2 = new Gamepad();
+
         // Put run blocks here.
         while (opModeIsActive()) {
+            // Update sampled gamepad states. Sampling the current gamepad state as 'currentGamepadN'
+            // is necessary for reliable edge triggering on button presses.
+            prevGamepad1.copy(currentGamepad1);
+            prevGamepad2.copy(currentGamepad2);
+            currentGamepad1.copy(gamepad1);
+            currentGamepad2.copy(gamepad2);
+
             // Speed adjustment: Robot translation uses 50% speed until the high-speed trigger is pressed.
             double translateSpeed = TRANSLATE_DEFAULT_SPEED;
-            if (gamepad1.right_trigger != 0) {
+            if (currentGamepad1.right_trigger != 0) {
                 translateSpeed = TRANSLATE_HIGH_SPEED;
             }
 
@@ -126,14 +139,14 @@ public class CompetitionTeleop288 extends LinearOpMode {
             // Field-centric control works by using the IMU heading to translate a field-centric
             // X-Y movement input into the robot-centric coordinate system. This is just a simple
             // vector rotation by the robot's current heading.
-            if (gamepad1.left_trigger != 0) {
+            if (currentGamepad1.left_trigger != 0) {
                 telemetry.addData("Info", "Resetting IMU orientation");
                 imu.initialize(imuParams); // Reset field-centric positioning when trigger is pressed
             }
 
-            double inputDriveX = inputScaling(-gamepad1.left_stick_x) * CALIBRATE_TRANSLATE_X * translateSpeed;
-            double inputDriveY = inputScaling(-gamepad1.left_stick_y) * CALIBRATE_TRANSLATE_Y * translateSpeed;
-            double inputDriveRotation = inputScaling(-gamepad1.right_stick_x) * CALIBRATE_ROTATE;
+            double inputDriveX = inputScaling(-currentGamepad1.left_stick_x) * CALIBRATE_TRANSLATE_X * translateSpeed;
+            double inputDriveY = inputScaling(-currentGamepad1.left_stick_y) * CALIBRATE_TRANSLATE_Y * translateSpeed;
+            double inputDriveRotation = inputScaling(-currentGamepad1.right_stick_x) * CALIBRATE_ROTATE;
             double yawDegrees = -imu.getRobotYawPitchRollAngles().getYaw();
             //yawDegrees = 0;
             // Rotate joystick X/Y from field-centric to robot-centric coordinates
@@ -142,22 +155,22 @@ public class CompetitionTeleop288 extends LinearOpMode {
             double robotDriveY = inputDriveX * sin(toRadians(yawDegrees)) + inputDriveY * cos(toRadians(yawDegrees));
 
             //This is my weird way of tuning PID values using the controller
-            if (gamepad1.dpad_down) {
+            if (currentGamepad1.dpad_down) {
                 proportional -= 0.0001;
             }
-            if (gamepad1.dpad_up) {
+            if (currentGamepad1.dpad_up) {
                 proportional += 0.0001;
             }
-            if (gamepad1.dpad_left) {
+            if (currentGamepad1.dpad_left) {
                 integral -= 0.0001;
             }
-            if (gamepad1.dpad_right) {
+            if (currentGamepad1.dpad_right) {
                 integral += 0.0001;
             }
-            if (gamepad1.y) {
+            if (currentGamepad1.y) {
                 derivative -= 0.0001;
             }
-            if (gamepad1.a) {
+            if (currentGamepad1.a) {
                 derivative += 0.0001;
             }
             //I'm not sure if this is the best way to get PID constants from here into SwerveDriveWheel but it works
@@ -165,32 +178,30 @@ public class CompetitionTeleop288 extends LinearOpMode {
 
 
             //Robot Scoring control
-            //this is just for the servos, I haven't written anything for the slide motors yet
-            robotScoring.shoulderDrive(gamepad2.right_stick_x);
-
-            if (gamepad2.a) {
-                robotScoring.intakePresetPoint1();
-                robotScoring.upperPickupPresetPoint1();
+            double liftControl = -inputScaling(currentGamepad2.left_stick_y);
+            double intakeSlideControl = inputScaling(currentGamepad2.right_stick_y);
+            double intakeShoulderControl = inputScaling(currentGamepad2.right_stick_x);
+            double intakeWristControl = inputScaling(currentGamepad2.right_trigger - currentGamepad2.left_trigger);
+            if (currentGamepad2.a && !prevGamepad2.a) {
+                robotScoring.intakeClawToggle();
             }
-            else if (gamepad2.b) {
-                robotScoring.intakePresetPoint2();
-                robotScoring.upperPickupPresetPoint2();
+            if (currentGamepad2.x && !prevGamepad2.x) {
+                robotScoring.upperShoulderPresetWall();
             }
-            else if (gamepad2.x) {
-                robotScoring.intakePresetPoint3();
-                robotScoring.upperPickupPresetPoint3();
+            if (currentGamepad2.b && !prevGamepad2.b) {
+                robotScoring.upperShoulderPresetBar();
             }
-            else if (gamepad2.y) {
-                robotScoring.intakePresetPoint4();
-                robotScoring.upperPickupPresetPoint4();
+            if (currentGamepad2.y && !prevGamepad2.y) {
+                robotScoring.upperClawToggle();
             }
-
+            if (currentGamepad2.left_bumper && !prevGamepad2.left_bumper) {
+                robotScoring.pickupPrepare();
+            } else if (currentGamepad2.right_bumper && !prevGamepad2.right_bumper) {
+                robotScoring.pickupBegin();
+            }
+            robotScoring.drive(liftControl, intakeSlideControl, intakeShoulderControl, intakeWristControl);
 
             telemetry.update();
-
-
-
-
         }
     }
 

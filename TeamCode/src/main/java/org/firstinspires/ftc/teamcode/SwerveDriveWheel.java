@@ -88,13 +88,11 @@ public class SwerveDriveWheel {
 
         //Telemetry.addData(Name + " Angle", currentAngle);
         //Telemetry.addData(Name + " Power", motorPower);
-        Telemetry.addData("proportional", Kp);
-        Telemetry.addData("Integral", Ki);
-        Telemetry.addData("Derivative", Kd);
+        //Telemetry.addData("proportional", Kp);
+        //Telemetry.addData("Integral", Ki);
+        //Telemetry.addData("Derivative", Kd);
 
         DriveMotor.setPower(motorPower);
-
-        Telemetry.update();
         }
 
 
