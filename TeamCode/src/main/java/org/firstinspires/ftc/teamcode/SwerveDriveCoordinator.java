@@ -1,26 +1,22 @@
 package org.firstinspires.ftc.teamcode;
 
-import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-
 public class SwerveDriveCoordinator {
     org.firstinspires.ftc.robotcore.external.Telemetry Telemetry;
-    private SwerveDriveWheel LFWheel, LRWheel, RFWheel, RRWheel;
+    private SweeDriveWheel LFWheel, LRWheel, RFWheel, RRWheel;
 
     public SwerveDriveCoordinator(
             org.firstinspires.ftc.robotcore.external.Telemetry telemetry,
-            SwerveDriveWheel lfWheel, SwerveDriveWheel lrWheel, SwerveDriveWheel rfWheel, SwerveDriveWheel rrWheel){
+            SweeDriveWheel lfWheel, SweeDriveWheel lrWheel, SweeDriveWheel rfWheel, SweeDriveWheel rrWheel){
         Telemetry = telemetry;
         LFWheel = lfWheel;
         LRWheel = lrWheel;
         RFWheel = rfWheel;
         RRWheel = rrWheel;
-
     }
-    public void drive(double vx, double vy, double vr, double kp, double ki, double kd) {
-
-        //Telemetry.addData("Velocity X", vx);
-        //Telemetry.addData("Velocity Y", vy);
-        //Telemetry.addData("Angular Velocity", vr);
+    public void drive(double vx, double vy, double vr) {
+        Telemetry.addData("Velocity X", vx);
+        Telemetry.addData("Velocity Y", vy);
+        Telemetry.addData("Angular Velocity", vr);
 
         double lfX = vx + vr;
         double lfY = vy + vr;
@@ -55,9 +51,9 @@ public class SwerveDriveCoordinator {
             rrPow /= powerScale;
         }
 
-        LFWheel.drive(lfDir, lfPow, kp, ki ,kd);
-        LRWheel.drive(lrDir, lrPow, kp, ki, kd);
-        RFWheel.drive(rfDir, rfPow, kp ,ki, kd);
-        RRWheel.drive(rrDir, rrPow, kp ,ki, kd);
+        LFWheel.drive(lfDir, lfPow);
+        LRWheel.drive(lrDir, lrPow);
+        RFWheel.drive(rfDir, rfPow);
+        RRWheel.drive(rrDir, rrPow);
     }
 }

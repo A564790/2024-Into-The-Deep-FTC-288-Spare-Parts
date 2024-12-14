@@ -2,8 +2,10 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -15,6 +17,8 @@ public class scoringController {
 
     private double shoulderTarget = 0;
 
+    private TouchSensor limitSwitch;
+
     private Servo lowerPickupServo, wristServo, armServo, shoulderServo, upperPickupServo, upperArmServo;
 
     private DcMotor elevatorMotorR, elevatorMotorL, extensionMotor;
@@ -25,8 +29,14 @@ public class scoringController {
     private double maximumHorizontalExtention = 0;
     private double maximumHorizontalRetraction = 0;
 
+    double iterations = 0;
+
+
     public scoringController(Telemetry telemetry, HardwareMap hardwareMap) {
         this.telemetry = telemetry;
+
+        limitSwitch = hardwareMap.get(TouchSensor.class, "limitSwitch");
+
 
         lowerPickupServo = hardwareMap.servo.get("Intake Claw");
         wristServo = hardwareMap.servo.get("Intake Wrist");
@@ -53,7 +63,7 @@ public class scoringController {
     private double elevatorTarget = 0.0;
     private double extensionTarget = 0.0;
     private double intakeShoulderTarget = 0.5; // 0.5 = Aligned to Middle
-    private double intakeWristTarget = 0; // 0 = Claw Aligned with Extension
+    private double intakeWristTarget = 0.5; // 0 = Claw Aligned with Extension
     private double intakeClawTarget = 0.0; // 0 = Open, 1 = Closed
     private double intakeElbowTarget = 1.0; // 1 = Inside Robot, 0 = At Floor
     private double upperClawTarget = 1.0; // 1 = Closed, 0 = Open
@@ -75,6 +85,12 @@ public class scoringController {
         }
         intakeClawTarget = 1.0 - intakeClawTarget;
     }
+    public void uppShoulderPresetBasket() {
+        if (pickupHandoffStateMachine) {
+            return;
+        }
+        upperShoulderTarget = 0.75;
+    }
     public void upperShoulderPresetWall() {
         if (pickupHandoffStateMachine) {
             return; // Ignored while doing pickup/handoff
@@ -85,7 +101,20 @@ public class scoringController {
         if (pickupHandoffStateMachine) {
             return; // Ignored while doing pickup/handoff
         }
-        upperShoulderTarget = 0.2; // TODO: Establish preset angle
+        upperShoulderTarget = 0.35; // TODO: Establish preset angle
+    }
+    public void elbowRetract() {
+        if (pickupHandoffStateMachine) {
+            return;
+        }
+        intakeElbowTarget = 1;
+        intakeWristTarget = 0.5;
+    }
+    public void elevatorScore() {
+        if (pickupHandoffStateMachine) {
+            return;
+        }
+        elevatorTarget = 1660;
     }
     public void upperClawToggle() {
         if (pickupHandoffStateMachine) {
@@ -96,14 +125,14 @@ public class scoringController {
     public void pickupPrepare() {
         pickupHandoffStateMachine = false;
         pickupHandoffTimer = null;
-        intakeElbowTarget = 0.0;
+        intakeElbowTarget = 0.1;
     }
     public void pickupBegin() {
         pickupHandoffStateMachine = true;
         pickupHandoffTimer = new ElapsedTime();
         pickupHandoffLongEdge = (intakeClawTarget > 0.5);
     }
-    public void drive(double liftControl, double intakeSlideControl, double intakeShoulderControl, double intakeWristControl) {
+    public void drive(double liftControl, double intakeSlideControl, double intakeShoulderControl, double intakeWristControl, boolean override) {
         if (pickupHandoffStateMachine) {
             telemetry.addData("Pickup State Machine", pickupHandoffTimer.toString());
             this.runPickupStateMachine();
@@ -111,23 +140,57 @@ public class scoringController {
             elevatorTarget += liftControl * 75;
             extensionTarget += intakeSlideControl * 50;
             intakeShoulderTarget += 0.015 * intakeShoulderControl;
+            intakeShoulderTarget = Math.max(0, Math.min(1.0, intakeShoulderTarget));
             intakeWristTarget += 0.05 * intakeWristControl;
+            intakeWristTarget = Math.max(0, Math.min(1.0, intakeWristTarget));
         }
 
         // Clamp encoder count targets to just barely inside the mechanical range
-        elevatorTarget = Math.max(0, Math.min(elevatorTarget, 3100));
-        extensionTarget = Math.max(0, Math.min(extensionTarget, 1900));
+        extensionTarget = Math.max(0, Math.min(extensionTarget, 2170));
 
-        // Drive DC motors to target values
+       /* // Drive DC motors to target values
         elevatorMotorL.setTargetPosition((int) elevatorTarget);
         elevatorMotorR.setTargetPosition((int) elevatorTarget);
         extensionMotor.setTargetPosition((int) extensionTarget);
         elevatorMotorL.setPower(1.0);
         elevatorMotorR.setPower(1.0);
         extensionMotor.setPower(1.0);
+        extensionMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         elevatorMotorL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         elevatorMotorR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        extensionMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        */
+
+        if (limitSwitch.isPressed()) {
+            elevatorMotorL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            elevatorMotorR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        }
+
+        if  (!limitSwitch.isPressed() && override) {
+            elevatorTarget = Math.max(-3000, Math.min(elevatorTarget, 3100));
+            elevatorTarget -= 75;
+            elevatorMotorR.setTargetPosition((int)elevatorTarget);
+            elevatorMotorL.setTargetPosition((int)elevatorTarget);
+            iterations += 1;
+            telemetry.addData("limitSwitch", iterations);
+        }
+        else {
+            // Drive DC motors to target values
+            elevatorTarget = Math.max(0, Math.min(elevatorTarget, 3100)); // 5 ticks = roughly 1/16 of an inch
+            elevatorMotorL.setTargetPosition((int) elevatorTarget);
+            elevatorMotorR.setTargetPosition((int) elevatorTarget);
+            extensionMotor.setTargetPosition((int) extensionTarget);
+            elevatorMotorL.setPower(1.0);
+            elevatorMotorR.setPower(1.0);
+            extensionMotor.setPower(1.0);
+            extensionMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            elevatorMotorL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            elevatorMotorR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        }
+
+
+
+        telemetry.addData("LimitSwitch", limitSwitch.isPressed());
         telemetry.addData("Elevator Target", elevatorTarget);
         telemetry.addData("Elevator Position (L)", elevatorMotorL.getCurrentPosition());
         telemetry.addData("Elevator Position (R)", elevatorMotorR.getCurrentPosition());
@@ -143,11 +206,11 @@ public class scoringController {
     }
 
     public void runPickupStateMachine() {
-        double t = pickupHandoffTimer.seconds();
+    double t = pickupHandoffTimer.seconds();
         // t *= 0.1; // uncomment to run slower for target value calibration
         if (t < 0.100) {
             intakeElbowTarget = 0.0;
-            elevatorTarget = (pickupHandoffLongEdge ? 370 : 400); // TODO: Calibrate handoff height
+            elevatorTarget = (pickupHandoffLongEdge ? 370 : 385); // TODO: Calibrate handoff height
             upperShoulderTarget = 0.5;
             upperClawTarget = 0.0;
         } else if (t < 0.250) {
@@ -165,7 +228,7 @@ public class scoringController {
         } else if (t < 1.800) {
             intakeClawTarget = (pickupHandoffLongEdge ? 1.0 : 0.0);
         } else if (t < 2.800) {
-            upperShoulderTarget = 0.8 * (t - 1.8); // smoother linear motion to avoid inertial movement of the game element
+            upperShoulderTarget = 0.75 * (t - 1.8); // smoother linear motion to avoid inertial movement of the game element
         } else {
             pickupHandoffStateMachine = false;
         }
