@@ -114,7 +114,7 @@ public class scoringController {
         if (pickupHandoffStateMachine) {
             return;
         }
-        elevatorTarget = 1660;
+        elevatorTarget = 1715;
     }
     public void upperClawToggle() {
         if (pickupHandoffStateMachine) {
