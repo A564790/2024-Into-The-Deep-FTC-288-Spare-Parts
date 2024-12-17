@@ -6,12 +6,12 @@ import com.arcrobotics.ftclib.command.button.GamepadButton;
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
 import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.arcrobotics.ftclib.geometry.Translation2d;
-import com.danpeled.swerveftclib.Swerve.SwerveDrive;
-import com.danpeled.swerveftclib.Swerve.SwerveDriveCoefficients;
-import com.danpeled.swerveftclib.Swerve.modules.AxonSwerveModule;
-import com.danpeled.swerveftclib.Swerve.modules.SwerveModuleConfiguration;
-import com.danpeled.swerveftclib.util.BaseDrive;
-import com.danpeled.swerveftclib.util.Location;
+import org.firstinspires.ftc.teamcode.swerveftclibtesting.Swerve.SwerveDrive;
+import org.firstinspires.ftc.teamcode.swerveftclibtesting.Swerve.SwerveDriveCoefficients;
+import org.firstinspires.ftc.teamcode.swerveftclibtesting.Swerve.modules.AxonSwerveModule;
+import org.firstinspires.ftc.teamcode.swerveftclibtesting.Swerve.modules.SwerveModuleConfiguration;
+import org.firstinspires.ftc.teamcode.swerveftclibtesting.util.BaseDrive;
+import org.firstinspires.ftc.teamcode.swerveftclibtesting.util.Location;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 

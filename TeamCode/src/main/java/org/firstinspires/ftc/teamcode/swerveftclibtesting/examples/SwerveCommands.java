@@ -1,8 +1,8 @@
 package org.firstinspires.ftc.teamcode.swerveftclibtesting.examples;
 
-import com.danpeled.swerveftclib.util.BaseDrive;
-import com.danpeled.swerveftclib.util.CommandUtil.CommandFor;
-import com.danpeled.swerveftclib.util.Location;
+import org.firstinspires.ftc.teamcode.swerveftclibtesting.util.BaseDrive;
+import org.firstinspires.ftc.teamcode.swerveftclibtesting.util.CommandUtil.CommandFor;
+import org.firstinspires.ftc.teamcode.swerveftclibtesting.util.Location;
 
 import java.util.function.Supplier;
 
