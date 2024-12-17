@@ -76,7 +76,7 @@ public class DriveByTime extends LinearOpMode {
                 y_direct = 0.0;
                 SwerveDrive.drive(inputDriveX, inputDriveY, inputDriveRotation);
                 robotScoring.elevatorScore();
-                robotScoring.drive(0.0, 0.0, 0.0, 0.0, false);
+                robotScoring.drive(0.75, 0.0, 0.0, 0.0, false);
             }
 
             if (runtime.seconds()>8 && runtime.seconds() < 11){//release from bar and drive away
