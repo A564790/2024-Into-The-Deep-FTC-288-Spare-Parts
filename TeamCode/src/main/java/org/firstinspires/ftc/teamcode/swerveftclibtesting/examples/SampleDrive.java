@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode.swerveftclibtesting.examples;
 
+import com.arcrobotics.ftclib.command.Command;
 import com.arcrobotics.ftclib.command.CommandOpMode;
+import com.arcrobotics.ftclib.command.CommandScheduler;
 import com.arcrobotics.ftclib.command.button.Button;
 import com.arcrobotics.ftclib.command.button.GamepadButton;
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
@@ -24,6 +26,7 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 @TeleOp
 public class SampleDrive extends CommandOpMode {
     // Constants for motor and servo control
+
     private static final double TICKS_PER_REVOLUTION = 537.6;  // example value
     private static final double WHEEL_CIRCUMFERENCE = Math.PI * 0.1; // Wheel circumference in meters (example)
     SwerveDrive swerveDrive;
@@ -36,6 +39,7 @@ public class SampleDrive extends CommandOpMode {
      */
     @Override
     public void initialize() {
+        CommandScheduler.getInstance().reset();
         driver = new GamepadEx(gamepad1);
 
         swerveDrive = new SwerveDrive(this, new SwerveDriveCoefficients(
@@ -46,14 +50,14 @@ public class SampleDrive extends CommandOpMode {
                 new Translation2d(-5, 5),
                 new Translation2d(5, -5),
                 new Translation2d(-5, -5),
-                "imu 1")
+                "imu")
         );
 
         swerveDrive.init(AxonSwerveModule.class, new SwerveModuleConfiguration[]{
-                SwerveModuleConfiguration.create("fl_drive", "fl_angle", "fl_encoder"),
-                SwerveModuleConfiguration.create("fr_drive", "fr_angle", "fr_encoder"),
-                SwerveModuleConfiguration.create("bl_drive", "bl_angle", "bl_encoder"),
-                SwerveModuleConfiguration.create("br_drive", "br_angle", "br_encoder")
+                SwerveModuleConfiguration.create("LFDrive", "LFSteer", "LFsteer"),
+                SwerveModuleConfiguration.create("RFDrive", "RFSteer", "RFsteer"),
+                SwerveModuleConfiguration.create("LRDrive", "LRSteer", "LRsteer"),
+                SwerveModuleConfiguration.create("RRDrive", "RRSteer", "RRsteer")
         });
 
         swerveSubsystem = new ExampleSwerveSubsystem(swerveDrive);
@@ -81,10 +85,13 @@ public class SampleDrive extends CommandOpMode {
 
         // Register the swerve drive subsystem
         register(swerveSubsystem);
+        telemetry.addData("test: ", swerveSubsystem.getDefaultCommand());
+        telemetry.update();
     }
 
     @Override
     public void run() {
-        swerveSubsystem.getDefaultCommand().schedule();
+        swerveSubsystem.getCurrentCommand().schedule();
     }
+
 }

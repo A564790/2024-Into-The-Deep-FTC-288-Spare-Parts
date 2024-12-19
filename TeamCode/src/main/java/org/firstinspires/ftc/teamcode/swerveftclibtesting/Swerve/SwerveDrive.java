@@ -7,13 +7,19 @@ import com.arcrobotics.ftclib.kinematics.wpilibkinematics.ChassisSpeeds;
 import com.arcrobotics.ftclib.kinematics.wpilibkinematics.SwerveDriveKinematics;
 import com.arcrobotics.ftclib.kinematics.wpilibkinematics.SwerveDriveOdometry;
 import com.arcrobotics.ftclib.kinematics.wpilibkinematics.SwerveModuleState;
+
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.teamcode.swerveftclibtesting.Swerve.modules.AxonSwerveModule;
 import org.firstinspires.ftc.teamcode.swerveftclibtesting.Swerve.modules.SwerveModule;
 import org.firstinspires.ftc.teamcode.swerveftclibtesting.Swerve.modules.SwerveModuleConfiguration;
 import org.firstinspires.ftc.teamcode.swerveftclibtesting.util.BaseDrive;
 import org.firstinspires.ftc.teamcode.swerveftclibtesting.util.Location;
-import com.qualcomm.hardware.bosch.BNO055IMU;
+
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.RobotLog;
 
@@ -38,7 +44,10 @@ public class SwerveDrive extends BaseDrive {
     /**
      * Parameters for the IMU (Inertial Measurement Unit).
      */
-    private final BNO055IMU.Parameters m_imuParameters = new BNO055IMU.Parameters();
+    private final IMU.Parameters m_imuParameters = new IMU.Parameters(
+            new RevHubOrientationOnRobot(
+            RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
+                    RevHubOrientationOnRobot.UsbFacingDirection.UP));
 
     /**
      * Starting position of the robot.
@@ -55,7 +64,7 @@ public class SwerveDrive extends BaseDrive {
     /**
      * Instance of the IMU.
      */
-    private BNO055IMU m_imu = null;
+    private IMU m_imu = null;
     /**
      * Swerve modules of the robot.
      */
@@ -135,19 +144,19 @@ public class SwerveDrive extends BaseDrive {
      * Initializes the IMU.
      */
     private void initIMU(String imuName) {
-        m_imu = m_hardwareMap.get(BNO055IMU.class, imuName);
+        m_imu = m_hardwareMap.get(IMU.class, imuName);
 
-        m_imuParameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
-        m_imuParameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+        //m_imuParameters.angleUnit = IMU.AngleUnit.DEGREES;
+        //m_imuParameters.accelUnit = IMU.AccelUnit.METERS_PERSEC_PERSEC;
         RobotLog.d("imu params init start");
         m_imu.initialize(m_imuParameters);
         RobotLog.d("imu init finished");
 
-        m_telemetry.addData("Gyro", "calibrating...");
+        //m_telemetry.addData("Gyro", "calibrating...");
 
-        ElapsedTime timer = new ElapsedTime();
-        timer.reset();
-        while (!m_imu.isGyroCalibrated() && !m_robot.isStopRequested() && timer.seconds() < 5) {
+       // ElapsedTime timer = new ElapsedTime();
+        //timer.reset();
+       /* while (!m_imu.isGyroCalibrated() && !m_robot.isStopRequested() && timer.seconds() < 5) {
             m_robot.sleep(50);
         }
         if (m_imu.isGyroCalibrated()) {
@@ -157,7 +166,7 @@ public class SwerveDrive extends BaseDrive {
         } else {
             m_robot.telemetry.addData("Gyro", "Gyro/IMU Calibration Failed");
             RobotLog.d("Gyro failed init" + " " + m_imu.isGyroCalibrated() + " " + m_imu.isAccelerometerCalibrated() + " " + m_imu.isMagnetometerCalibrated());
-        }
+        }*/
     }
 
     /**
@@ -239,7 +248,9 @@ public class SwerveDrive extends BaseDrive {
      */
     @Override
     public double getHeading() {
-        Orientation orientation = m_imu.getAngularOrientation();
+        Orientation orientation = m_imu.getRobotOrientation(AxesReference.INTRINSIC,
+                AxesOrder.XYZ,
+                AngleUnit.DEGREES);
         return (-orientation.firstAngle + m_startingPosition.angle) % 360;
     }
 

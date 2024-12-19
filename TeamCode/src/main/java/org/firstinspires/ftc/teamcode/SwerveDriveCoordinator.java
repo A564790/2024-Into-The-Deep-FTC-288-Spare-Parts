@@ -2,11 +2,11 @@ package org.firstinspires.ftc.teamcode;
 
 public class SwerveDriveCoordinator {
     org.firstinspires.ftc.robotcore.external.Telemetry Telemetry;
-    private SweeDriveWheel LFWheel, LRWheel, RFWheel, RRWheel;
+    private SwerveDriveWheel LFWheel, LRWheel, RFWheel, RRWheel;
 
     public SwerveDriveCoordinator(
             org.firstinspires.ftc.robotcore.external.Telemetry telemetry,
-            SweeDriveWheel lfWheel, SweeDriveWheel lrWheel, SweeDriveWheel rfWheel, SweeDriveWheel rrWheel){
+            SwerveDriveWheel lfWheel, SwerveDriveWheel lrWheel, SwerveDriveWheel rfWheel, SwerveDriveWheel rrWheel){
         Telemetry = telemetry;
         LFWheel = lfWheel;
         LRWheel = lrWheel;
@@ -51,9 +51,9 @@ public class SwerveDriveCoordinator {
             rrPow /= powerScale;
         }
 
-        LFWheel.drive(lfDir, lfPow);
-        LRWheel.drive(lrDir, lrPow);
-        RFWheel.drive(rfDir, rfPow);
-        RRWheel.drive(rrDir, rrPow);
+        LFWheel.drive(lfDir, lfPow, 0.002, 0, 0);
+        LRWheel.drive(lrDir, lrPow, 0.002, 0, 0);
+        RFWheel.drive(rfDir, rfPow, 0.002, 0, 0);
+        RRWheel.drive(rrDir, rrPow, 0.002, 0, 0);
     }
 }
