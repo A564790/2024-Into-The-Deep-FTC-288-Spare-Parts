@@ -255,22 +255,22 @@ public class scoringController {
         double t = pickupHandoffTimer.seconds();
          t *= 0.5; // uncomment to run slower for target value calibration
         if (t < 0.100) {
-            elevatorTarget = (pickupHandoffLongEdge ? 780 : 795); // TODO: Calibrate handoff height
+            elevatorTarget = (pickupHandoffLongEdge ? 780 : 795);
             upperClawTarget = 0.0;
         }  else if (t < 0.400) {
             intakeShoulderTarget = 0.5;
             intakeWristTarget = (pickupHandoffLongEdge ? 0.0 : 0.5);
-            intakeElbowTarget = 0.8; // TODO: Calibrate handoff angle
+            intakeElbowTarget = 0.8;
         } else if (t < 1.000) {
-            extensionTarget = 0; // TODO: Calibrate handoff extension
+            extensionTarget = 0;
         }
     }
     public void runPickupStateMachineStageTwo() {
         double T = pickupHandoffTimerTwo.seconds();
         if (T < 0.800) {
-            upperShoulderTarget = 0.25;
+            upperShoulderTarget = 0.25; // TODO make the upper shoulder handoff one smooth movement
         }  else if (T < 1.1) {
-        upperShoulderTarget = 0.0;// TODO: Calibrate handoff angle
+        upperShoulderTarget = 0.0;
         } else if (T < 1.300) {
             upperClawTarget = 1.0;
         } else if (T < 1.600) {
