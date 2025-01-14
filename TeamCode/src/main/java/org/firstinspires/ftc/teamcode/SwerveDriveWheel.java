@@ -1,10 +1,12 @@
-package org.firstinspires.ftc.teamcode;
+/* package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+import java.util.Objects;
 
 public class SwerveDriveWheel {
     private String Name; // Name, used for logging and telemetry
@@ -23,7 +25,7 @@ public class SwerveDriveWheel {
 
     //private double ERROR_TO_SERVO_POWER = 0.005;
     private double MAXIMUM_SERVO_POWER = 1.0;
-    private double ANGLE_ERROR_TOLERANCE = 0.5;
+    private double ANGLE_ERROR_TOLERANCE = 0;
     private double MINIMUM_SERVO_POWER = 0.025;
 
     ElapsedTime timer = new ElapsedTime();
@@ -83,19 +85,23 @@ public class SwerveDriveWheel {
         if (Math.abs(angleError) < ANGLE_ERROR_TOLERANCE) {
             servoPower = 0;
         }
+
         AngleServo.setPower(servoPower);
 
-        //Telemetry.addData(Name + " Angle", currentAngle);
-        //Telemetry.addData(Name + " Power", motorPower);
-        //Telemetry.addData("proportional", Kp);
-        //Telemetry.addData("Integral", Ki);
-        //Telemetry.addData("Derivative", Kd);
-
         DriveMotor.setPower(motorPower);
+
+
+        Telemetry.addData(Name + " Angle", currentAngle);
+        Telemetry.addData(Name + " Power", motorPower);
+        Telemetry.addData("proportional", Kp);
+        Telemetry.addData("Integral", Ki);
+        Telemetry.addData("Derivative", Kd);
         }
 
 
     }
+
+ */
 
 
 

@@ -70,8 +70,12 @@ public class scoringController {
     private double upperShoulderTarget = 1.0; // 1 = Towards Wall, 0 = Inside Robot
 
     // True while the intake pickup/handoff state machine is running
+    private boolean pickupHandoffStateMachineZero = false;
     private boolean pickupHandoffStateMachine = false;
     private boolean pickupHandoffStateMachineTwo = false;
+    private boolean stateMachineActive = false;
+    private ElapsedTime slowDownTimer;
+    private ElapsedTime pickupHandoffTimerZero;
     private ElapsedTime pickupHandoffTimer;
     private ElapsedTime pickupHandoffTimerTwo;
 
@@ -82,70 +86,87 @@ public class scoringController {
     private boolean pickupHandoffLongEdge = false;
 
     public void intakeClawToggle() {
-        if (pickupHandoffStateMachine || pickupHandoffStateMachineTwo) {
+        if (stateMachineActive) {
             return; // Ignored while doing pickup/handoff
         }
         intakeClawTarget = 1.0 - intakeClawTarget;
     }
     public void uppShoulderPresetBasket() {
-        if (pickupHandoffStateMachine || pickupHandoffStateMachineTwo) {
+        if (stateMachineActive) {
             return;
         }
         upperShoulderTarget = 0.35;
     }
     public void upperShoulderPresetWall() {
-        if (pickupHandoffStateMachine || pickupHandoffStateMachineTwo) {
+        if (stateMachineActive) {
             return; // Ignored while doing pickup/handoff
         }
-        upperShoulderTarget = 1.0;// TODO: Establish preset angle
+        upperShoulderTarget = 1.0;
         elevatorTarget = 600;
     }
-    public void upperShoulderPresetBar() {
+    /*public void upperShoulderPresetBar() {
         if (pickupHandoffStateMachine || pickupHandoffStateMachineTwo) {
             return; // Ignored while doing pickup/handoff
         }
         upperShoulderTarget = 0.25; // TODO: Establish preset angle
     }
+
+     */
     public void elbowRetract() {
-        if (pickupHandoffStateMachine || pickupHandoffStateMachineTwo) {
+        if (stateMachineActive) {
             return;
         }
-        intakeElbowTarget = 1;
+        intakeElbowTarget = 1.0;
         intakeWristTarget = 0.5;
     }
     public void elevatorScore() {
-        if (pickupHandoffStateMachine || pickupHandoffStateMachineTwo) {
+        if (stateMachineActive) {
             return;
         }
+        upperShoulderTarget = 0.25;
         elevatorTarget = 1404;
     }
     public void upperClawToggle() {
-        if (pickupHandoffStateMachine || pickupHandoffStateMachineTwo) {
+        if (stateMachineActive) {
             return; // Ignored while doing pickup/handoff
         }
         upperClawTarget = 1.0 - upperClawTarget;
     }
     public void pickupPrepare() {
+        pickupHandoffStateMachineZero = false;
         pickupHandoffStateMachine = false;
         pickupHandoffStateMachineTwo = false;
+        stateMachineActive = false;
+        pickupHandoffTimerZero = null;
         pickupHandoffTimer = null;
-        intakeElbowTarget = 0.1;
+        pickupHandoffTimerTwo = null;
+        intakeElbowTarget = 0.05;
     }
-    public void pickupBegin() {
-        pickupHandoffStateMachine = true;
-        pickupHandoffTimer = new ElapsedTime();
+    public void chickenPecker() {
+        stateMachineActive = true;
+        pickupHandoffStateMachineZero = true;
+        pickupHandoffTimerZero = new ElapsedTime();
         pickupHandoffLongEdge = (intakeClawTarget > 0.5);
     }
+    public void pickupStageOne() {
+        stateMachineActive = true;
+        pickupHandoffStateMachine = true;
+        pickupHandoffTimer = new ElapsedTime();
+    }
     public void pickupStageTwo() {
+        stateMachineActive = true;
         pickupHandoffStateMachineTwo = true;
         pickupHandoffTimerTwo = new ElapsedTime();
     }
 
     public void drive(double liftControl, double intakeSlideControl, double intakeShoulderControl, double intakeWristControl, boolean override) {
+        if (pickupHandoffStateMachineZero) {
+            telemetry.addData("Pickup State Machine Stage 0", pickupHandoffTimerZero.toString());
+            this.runPickupStateMachineStageZero();
+        }
         if (pickupHandoffStateMachine) {
-            telemetry.addData("Pickup State Machine", pickupHandoffTimer.toString());
-            this.runPickupStateMachine();
-
+            telemetry.addData("Pickup State Machine Stage 1", pickupHandoffTimer.toString());
+            this.runPickupStateMachineStageOne();
         }
         if (pickupHandoffStateMachineTwo) {
             telemetry.addData("Pickup State Machine Stage 2", pickupHandoffTimerTwo.toString());
@@ -220,16 +241,23 @@ public class scoringController {
         upperArmServo.setPosition(upperShoulderTarget);
     }
 
-    public void runPickupStateMachine() {
+    public void runPickupStateMachineStageZero() {
+        double x = pickupHandoffTimerZero.seconds();
+        if (x < 0.100) {
+            intakeElbowTarget = 0.0;
+        } else if (x < 0.250) {
+            intakeClawTarget = (pickupHandoffLongEdge ? 0.0 : 1.0);}
+        else if (x < 0.8) {
+            intakeElbowTarget = 0.23;
+        }
+    }
+    public void runPickupStateMachineStageOne() {
         double t = pickupHandoffTimer.seconds();
          t *= 0.5; // uncomment to run slower for target value calibration
         if (t < 0.100) {
-            intakeElbowTarget = 0.0;
             elevatorTarget = (pickupHandoffLongEdge ? 780 : 795); // TODO: Calibrate handoff height
             upperClawTarget = 0.0;
-        } else if (t < 0.250) {
-            intakeClawTarget = (pickupHandoffLongEdge ? 0.0 : 1.0);
-        } else if (t < 0.400) {
+        }  else if (t < 0.400) {
             intakeShoulderTarget = 0.5;
             intakeWristTarget = (pickupHandoffLongEdge ? 0.0 : 0.5);
             intakeElbowTarget = 0.8; // TODO: Calibrate handoff angle
@@ -240,15 +268,15 @@ public class scoringController {
     public void runPickupStateMachineStageTwo() {
         double T = pickupHandoffTimerTwo.seconds();
         if (T < 0.800) {
-            upperShoulderTarget = 0.2;
-        }  else if (T < 1) {
+            upperShoulderTarget = 0.25;
+        }  else if (T < 1.1) {
         upperShoulderTarget = 0.0;// TODO: Calibrate handoff angle
         } else if (T < 1.300) {
             upperClawTarget = 1.0;
         } else if (T < 1.600) {
             intakeClawTarget = (pickupHandoffLongEdge ? 1.0 : 0.0);
         } else if (T < 2.500) {
-            upperShoulderTarget = 0.75 * (T - 1.5); // smoother linear motion to avoid inertial movement of the game element
+            upperShoulderTarget = 0.25 * (T - 1); // smoother linear motion to avoid inertial movement of the game element
         } else {
             pickupHandoffStateMachine = false;
             pickupHandoffStateMachineTwo = false;
