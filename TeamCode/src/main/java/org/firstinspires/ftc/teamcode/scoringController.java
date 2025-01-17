@@ -104,11 +104,11 @@ public class scoringController {
         upperShoulderTarget = 1.0;
         elevatorTarget = 600;
     }
-    /*public void upperShoulderPresetBar() {
+    /* public void upperShoulderPresetBar() {
         if (pickupHandoffStateMachine || pickupHandoffStateMachineTwo) {
             return; // Ignored while doing pickup/handoff
         }
-        upperShoulderTarget = 0.25; // TODO: Establish preset angle
+        upperShoulderTarget = 0.25;
     }
 
      */
@@ -124,13 +124,25 @@ public class scoringController {
             return;
         }
         upperShoulderTarget = 0.25;
-        elevatorTarget = 1404;
+        elevatorTarget = 1450;
     }
     public void upperClawToggle() {
         if (stateMachineActive) {
             return; // Ignored while doing pickup/handoff
         }
         upperClawTarget = 1.0 - upperClawTarget;
+    }
+    public void upperClawPosition(double position) {
+        if (stateMachineActive) {
+            return;
+        }
+        upperClawTarget = position;
+    }
+    public void upperArmPosition(double Position) {
+        if (stateMachineActive) {
+            return;
+        }
+        upperShoulderTarget = Position;
     }
     public void pickupPrepare() {
         pickupHandoffStateMachineZero = false;
@@ -143,7 +155,6 @@ public class scoringController {
         intakeElbowTarget = 0.05;
     }
     public void chickenPecker() {
-        stateMachineActive = true;
         pickupHandoffStateMachineZero = true;
         pickupHandoffTimerZero = new ElapsedTime();
         pickupHandoffLongEdge = (intakeClawTarget > 0.5);
@@ -263,21 +274,24 @@ public class scoringController {
             intakeElbowTarget = 0.8;
         } else if (t < 1.000) {
             extensionTarget = 0;
+        } else {
+            stateMachineActive = false;
         }
     }
     public void runPickupStateMachineStageTwo() {
         double T = pickupHandoffTimerTwo.seconds();
-        if (T < 0.800) {
-            upperShoulderTarget = 0.25; // TODO make the upper shoulder handoff one smooth movement
+        if (T < 1.0) {
+            upperShoulderTarget = 1.0 - T;  // Smoothly decrease from 1.0 to 0.0 over 0.9 seconds
         }  else if (T < 1.1) {
         upperShoulderTarget = 0.0;
-        } else if (T < 1.300) {
+        } else if (T < 1.4) {
             upperClawTarget = 1.0;
-        } else if (T < 1.600) {
+        } else if (T < 1.7) {
             intakeClawTarget = (pickupHandoffLongEdge ? 1.0 : 0.0);
-        } else if (T < 2.500) {
-            upperShoulderTarget = 0.25 * (T - 1); // smoother linear motion to avoid inertial movement of the game element
+        } else if (T < 2.7) {
+            upperShoulderTarget = 0.35;
         } else {
+            stateMachineActive = false;
             pickupHandoffStateMachine = false;
             pickupHandoffStateMachineTwo = false;
         }

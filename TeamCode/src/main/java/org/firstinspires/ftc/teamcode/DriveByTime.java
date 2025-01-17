@@ -26,7 +26,8 @@ public class DriveByTime extends LinearOpMode {
     final double JOYSTICK_MOVEMENT_SENSITIVITY = 0.75;
     final double JOYSTICK_ROTATION_SENSITIVITY = 1.00;
     private double x_direct; //Positive is right on joystick, negative is left
-    private double y_direct;//positive is forward on joystick, negative is backward
+    private double y_direct; //positive is forward on joystick, negative is backward
+    private double r_direct;
     //adjust x_direct and y_direct accordingly for speed and direction
 //input scaling and other joystick code is here to automatically calculate motor direction appropriately and simplify each direction command
     double inputScaling(double x) {
@@ -65,7 +66,7 @@ public class DriveByTime extends LinearOpMode {
 
             double joystickMovementY = inputScaling(y_direct) * JOYSTICK_MOVEMENT_SENSITIVITY;  // Note: pushing stick forward gives negative value
             double joystickMovementX = inputScaling(x_direct) * JOYSTICK_MOVEMENT_SENSITIVITY;
-            double yaw = (inputScaling(0) * JOYSTICK_ROTATION_SENSITIVITY) * 0.75;
+            double yaw = (inputScaling(r_direct) * JOYSTICK_ROTATION_SENSITIVITY) * 0.75;
 
             //get robot orientation from imu
             double robotHeading = imu.getRobotOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).firstAngle;
@@ -105,48 +106,88 @@ public class DriveByTime extends LinearOpMode {
 
 
 
-            if (runtime.seconds()<2) {//section that gets arm in pre score position
-                //robotScoring.upperShoulderPresetBar();
-                //robotScoring.drive(0.27, 0.0, 0.0, 0.0, false);
+            if (runtime.seconds()<1.75) {//section that gets arm in pre score position
+                robotScoring.upperArmPosition(0.25);
+                robotScoring.elevatorScore();
+                robotScoring.drive(0.0, 0.0, 0.0, 0.0, false);
                 // goes up to 1404
             }
 
             //TODO: Adjust x and y direct values and time to account for faster and lighter drivetrain
-            if (runtime.seconds()>3 && runtime.seconds()<4){//drive for 2 seconds to bar
+           if (runtime.seconds()>1.75 && runtime.seconds()<3.5){//drive for 2 seconds to bar
                 y_direct = 0.8;
                 mechDrive.drive(leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);
             }
 
-            if (runtime.seconds()>5 && runtime.seconds()<8){//score on bar
+            if (runtime.seconds()>3.5 && runtime.seconds()<4){//score on bar
                 y_direct = 0.0;
                 mechDrive.drive(leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);
-                //robotScoring.elevatorScore();
-                //robotScoring.drive(0.75, 0.0, 0.0, 0.0, false);
+                robotScoring.upperClawPosition(0);
+                robotScoring.drive(0.0, 0.0, 0.0, 0.0, false);
                 //goes up to 1460.25
             }
-
-            if (runtime.seconds()>8 && runtime.seconds() < 11){//release from bar and drive away
-                //robotScoring.upperClawToggle();
-                //robotScoring.drive(0.0, 0.0, 0.0, 0.0, false);
-                //doesn't move
-                y_direct = -0.8;
+            if (runtime.seconds()>4 && runtime.seconds() < 7.5){//release from bar and drive away
+                y_direct = -0.7;
+                x_direct = 0.85;
                 mechDrive.drive(leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);
+                robotScoring.upperShoulderPresetWall();
+                robotScoring.drive(0.0, 0.0, 0.0, 0.0, false);
             }
-            if (runtime.seconds()>11 && runtime.seconds() < 13){//Strafe into park zone
-                x_direct = -0.5;
-                y_direct = 0.0;
-                mechDrive.drive(leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);
-            }
-            if (runtime.seconds()>13 && runtime.seconds()>14) { //Stop and lower elevator and put arm in wall position
+            if (runtime.seconds()>7.5 && runtime.seconds() < 8.0){
+                y_direct = 0.7;
                 x_direct = 0.0;
                 mechDrive.drive(leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);
-                //robotScoring.upperShoulderPresetWall();
-                //robotScoring.drive(-0.7, 0.0, 0.0, 0.0, false);
-                //goes to 565.5
+                robotScoring.upperClawPosition(0);
+                robotScoring.drive(0.0, 0.0, 0.0, 0.0, false);
             }
-            if (runtime.seconds()>14){//stop lowering elevator
-                //robotScoring.drive(0.0, 0.0, 0.0, 0.0, false);
+            if (runtime.seconds()>8.0 && runtime.seconds()<9.5) {
+                y_direct = 0.0;
+                x_direct = 0.0;
+                mechDrive.drive(leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);
             }
+            if (runtime.seconds()>9.5 && runtime.seconds()<10) {
+                y_direct = -0.7;
+                mechDrive.drive(leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);
+            }
+            if (runtime.seconds()>10 && runtime.seconds()<10.5) {
+                robotScoring.upperClawPosition(1);
+                robotScoring.drive(0.0, 0.0, 0.0, 0.0, false);
+            }
+            if (runtime.seconds()>10.5 && runtime.seconds()<11) {//stop lowering elevator
+                robotScoring.elevatorScore();
+                robotScoring.drive(0.0, 0.0, 0.0, 0.0, false);
+            }
+            if (runtime.seconds()>11 && runtime.seconds()<12.5) {
+                y_direct = -0.3;
+                x_direct = -1.0;
+                mechDrive.drive(leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);
+            }
+            if (runtime.seconds()>12.5 && runtime.seconds()< 14.0) {
+                y_direct = 0.75;
+                x_direct = 0;
+                mechDrive.drive(leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);
+            }
+            if (runtime.seconds()>14.0 && runtime.seconds()<17.5){//drive for 2 seconds to bar
+                robotScoring.upperClawPosition(0);
+                robotScoring.drive(-0.25, 0.0, 0.0, 0.0, false);
+                y_direct = -0.65;
+                x_direct = 0.85;
+                mechDrive.drive(leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);
+            }
+            if (runtime.seconds()>17.5 && runtime.seconds()<18.0) {
+                y_direct = 0.7;
+                x_direct = 0.0;
+                mechDrive.drive(leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);
+            }
+            if (runtime.seconds()>18.0 && runtime.seconds()<19.0) {
+                y_direct = 0.0;
+                x_direct = 0.0;
+                mechDrive.drive(leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);
+                robotScoring.upperArmPosition(runtime.seconds() - 18.0);
+                robotScoring.drive(0.0, 0.0, 0.0, 0.0, false);
+            }
+
+
 
 
 

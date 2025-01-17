@@ -79,6 +79,11 @@ public class CompetitionTelee288 extends LinearOpMode {
             currentGamepad1.copy(gamepad1);
             currentGamepad2.copy(gamepad2);
 
+            if (gamepad1.right_trigger > 0) {
+                telemetry.addData("info","resetting imu orientation");
+                imu.initialize(imuParams);
+            }
+
             double joystickMovementY = inputScaling(-gamepad1.left_stick_y) * JOYSTICK_MOVEMENT_SENSITIVITY;  // Note: pushing stick forward gives negative value
             double joystickMovementX = inputScaling(gamepad1.left_stick_x) * JOYSTICK_MOVEMENT_SENSITIVITY;
             double yaw = (inputScaling(gamepad1.right_stick_x) * JOYSTICK_ROTATION_SENSITIVITY) * 0.75;
@@ -142,7 +147,7 @@ public class CompetitionTelee288 extends LinearOpMode {
                 robotScoring.elevatorScore();
             }
             if (currentGamepad2.dpad_down && !prevGamepad2.dpad_down) {
-                robotScoring.elbowRetract();
+                robotScoring.pickupStageOne();
             }
             if (currentGamepad2.dpad_up && !prevGamepad2.dpad_up) {
                 robotScoring.uppShoulderPresetBasket();
@@ -153,7 +158,7 @@ public class CompetitionTelee288 extends LinearOpMode {
                 robotScoring.chickenPecker();
             }
             if (currentGamepad2.dpad_left && !prevGamepad2.dpad_left) {
-                robotScoring.pickupStageOne();
+                robotScoring.elbowRetract();
             }
             if (currentGamepad2.dpad_right && !prevGamepad2.dpad_right) {
                 robotScoring.pickupStageTwo();
